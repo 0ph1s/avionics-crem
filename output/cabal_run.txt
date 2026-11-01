@@ -1,0 +1,53 @@
+=== Seção 1: FSM ingênua (pattern matching exaustivo) ===
+Eventos:      [TakeoffSignal,CriticalBattery,LandedSignal,SystemCutoff]
+Saídas:       [MsgTakeoff,MsgEmergency,MsgLanded,MsgShutdown]
+Estado final: Shutdown
+
+=== Seção 2: State Monad e composição de Kleisli ===
+Saídas:       [MsgTakeoff,MsgEmergency,MsgLanded,MsgShutdown]
+Estado final: Shutdown
+  [ok]   identidade à esquerda: pure a >>= f == f a
+  [ok]   identidade à direita: m >>= pure == m
+  [ok]   associatividade de >>= (m, f, g do autopiloto)
+  [ok]   Kleisli: pure >=> f == f
+  [ok]   Kleisli: f >=> pure == f
+  [ok]   Kleisli: (f >=> g) >=> h == f >=> (g >=> h) (todas mudam o estado)
+  [ok]   Kleisli: associatividade com setas que mudam o estado nas 3 posições
+  [ok]   runEvents (State Monad) == runMealy (mapAccumL), sem mônada
+  [ok]   composeAll (foldr (>=>) pure) == último passo de runEvents
+
+=== Seção 3: CREM (topologia verificada em tempo de compilação) ===
+Saídas CREM:  [MsgTakeoff,MsgEmergency,MsgLanded,MsgShutdown]
+Igual à versão ingênua e à State Monad? True
+CREM == ingênua em todas as 85 sequências de até 3 eventos a partir de Grounded? True
+
+=== Seção 4a: Parallel (aviônica || energia), estados independentes ===
+  (TakeoffSignal,Drain) -> (MsgTakeoff,ReportLow)
+  (TakeoffSignal,Drain) -> (MsgIgnored,ReportCritical)
+  (CriticalBattery,Recharge) -> (MsgEmergency,ReportLow)
+  (LandedSignal,Recharge) -> (MsgLanded,ReportOk)
+
+=== Seção 4b: Sequential (energia -> tradução -> aviônica) ===
+Aviônica começa em InFlight e energia em Charged; cada uma guarda o seu estado.
+  Drain -> Right ()
+  Drain -> Left MsgEmergency
+  Drain -> Left MsgIgnored
+  Recharge -> Right ()
+  Recharge -> Right ()
+  Drain -> Right ()
+(Right () = sem evento para a aviônica; Left o = saída da aviônica)
+
+=== Diagramas (módulo Render do CREM) ===
+  gravado: output/coupled_flow.mmd
+  gravado: output/avionics_topology.mmd, power_topology.mmd, uav_product.mmd
+--- avionics_topology.mmd ---
+stateDiagram-v2
+
+Grounded
+InFlight
+EmergencyLanding
+Shutdown
+Grounded --> InFlight
+Grounded --> Shutdown
+InFlight --> EmergencyLanding
+EmergencyLanding --> Grounded

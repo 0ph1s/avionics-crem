@@ -1,0 +1,10 @@
+stateDiagram-v2
+
+Grounded
+InFlight
+EmergencyLanding
+Shutdown
+Grounded --> InFlight
+Grounded --> Shutdown
+InFlight --> EmergencyLanding
+EmergencyLanding --> Grounded

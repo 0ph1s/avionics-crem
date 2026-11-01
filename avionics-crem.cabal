@@ -1,0 +1,88 @@
+cabal-version: 3.0
+name: avionics-crem
+version: 0.1.0.0
+synopsis: FSM de aviônica de UAV formalizada com CREM (projeto PIC Fatec Rubens Lara)
+build-type: Simple
+
+common warnings
+  -- -Werror=incomplete-patterns: um par (estado, evento) omitido na
+  -- Seção 1 deixa de ser aviso e passa a ser erro de compilação.
+  ghc-options: -Wall -Werror=incomplete-patterns -Wno-all-missed-specialisations -Wno-missing-export-lists -Wno-missing-local-signatures -Wno-name-shadowing -Wno-type-defaults
+  default-language: GHC2021
+
+library
+  import: warnings
+  hs-source-dirs: src
+  exposed-modules:
+    Avionics.Naive
+    Avionics.StateMonad
+    Avionics.Crem
+    Avionics.Power
+    Avionics.Compose
+    Avionics.Diagram
+    Avionics.Sim.Scenario
+    Avionics.Sim.Observe
+    Avionics.Sim.Trace
+    Avionics.Sim.Mission
+    Avionics.Sim.Plant
+    Avionics.Sim.Loop
+    Avionics.Sim.Simulate
+    Avionics.Sim.Properties
+    Avionics.Sim.Validate
+    Avionics.Sim.Mermaid
+  build-depends:
+    base,
+    crem,
+    singletons-base,
+    text
+
+executable avionics-crem
+  import: warnings
+  main-is: Main.hs
+  hs-source-dirs: app
+  build-depends:
+    base,
+    avionics-crem,
+    crem,
+    singletons-base,
+    text,
+    directory
+
+-- Demonstração do simulador (dois cenários em malha fechada + diagramas Mermaid).
+executable avionics-sim
+  import: warnings
+  main-is: Main.hs
+  hs-source-dirs: app-sim
+  build-depends:
+    base,
+    avionics-crem,
+    directory
+
+-- Teste de invalidez: este alvo NÃO compila (de propósito). Como é um
+-- test-suite, `cabal build` e `cabal run` não o incluem; ele só é
+-- construído com:  cabal build invalid-inflight-shutdown --enable-tests
+test-suite invalid-inflight-shutdown
+  import: warnings
+  type: exitcode-stdio-1.0
+  main-is: InvalidInFlightShutdown.hs
+  hs-source-dirs: invalid
+  build-depends:
+    base,
+    avionics-crem,
+    crem,
+    singletons-base
+
+-- Suíte do simulador (Fases 1 a 4). Rodar com o alvo explícito:
+--   cabal test avionics-sim-tests
+-- `cabal test` sem alvo também constrói `invalid-inflight-shutdown`, que não
+-- compila de propósito, e por isso falha.
+test-suite avionics-sim-tests
+  import: warnings
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs: test
+  build-depends:
+    base,
+    avionics-crem,
+    crem,
+    singletons-base

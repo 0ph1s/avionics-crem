@@ -1,0 +1,47 @@
+Warning: The package list for 'hackage.haskell.org' is 106 days old.
+Run 'cabal update' to get the latest list of available packages.
+Resolving dependencies...
+Build profile: -w ghc-9.6.7 -O1
+In order, the following will be built (use -v for more details):
+ - avionics-crem-0.1.0.0 (lib) (configuration changed)
+ - avionics-crem-0.1.0.0 (test:invalid-inflight-shutdown) (first run)
+Configuring library for avionics-crem-0.1.0.0...
+Preprocessing library for avionics-crem-0.1.0.0...
+Building library for avionics-crem-0.1.0.0...
+Configuring test suite 'invalid-inflight-shutdown' for avionics-crem-0.1.0.0...
+Preprocessing test suite 'invalid-inflight-shutdown' for avionics-crem-0.1.0.0...
+Building test suite 'invalid-inflight-shutdown' for avionics-crem-0.1.0.0...
+[1 of 1] Compiling Main             ( invalid\InvalidInFlightShutdown.hs, C:\Users\Peterson\Desktop\Fatec\IC\others\avionics-crem\dist-newstyle\build\x86_64-windows\ghc-9.6.7\avionics-crem-0.1.0.0\t\invalid-inflight-shutdown\build\invalid-inflight-shutdown\invalid-inflight-shutdown-tmp\Main.o )
+
+invalid\InvalidInFlightShutdown.hs:23:39: error: [GHC-39999]
+    * Could not deduce `Crem.Topology.AllowedTransition
+                          (Crem.Topology.Topology '[]) InFlight Shutdown'
+        arising from a use of `pureResult'
+      from the context: Applicative m
+        bound by the type signature for:
+                   invalidInFlightShutdown :: forall (m :: * -> *).
+                                              Applicative m =>
+                                              SAvionicsVertex InFlight
+                                              -> AvEvent
+                                              -> ActionResult
+                                                   m
+                                                   AvionicsTopology
+                                                   SAvionicsVertex
+                                                   InFlight
+                                                   Output
+        at invalid\InvalidInFlightShutdown.hs:(18,1)-(22,69)
+      or from: ()
+        bound by a pattern with constructor:
+                   SInFlight :: SAvionicsVertex InFlight,
+                 in an equation for `invalidInFlightShutdown'
+        at invalid\InvalidInFlightShutdown.hs:23:25-33
+    * In the expression: pureResult MsgShutdown SShutdown
+      In an equation for `invalidInFlightShutdown':
+          invalidInFlightShutdown SInFlight _
+            = pureResult MsgShutdown SShutdown
+   |
+23 | invalidInFlightShutdown SInFlight _ = pureResult MsgShutdown SShutdown
+   |                                       ^^^^^^^^^^
+Error: [Cabal-7125]
+Failed to build test:invalid-inflight-shutdown from avionics-crem-0.1.0.0.
+
