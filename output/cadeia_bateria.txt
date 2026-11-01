@@ -1,0 +1,14 @@
+Test suite avionics-chain-tests: RUNNING...
+=== Cadeia da bateria e descarte do slot (N = 8, 87381 cenários, malha fechada) ===
+  [ok]    toda entrada da bateria em Critical, com a aviônica em voo, leva a EmergencyLanding no tick seguinte
+  [achado] cenários que alcançam EmergencyLanding: 22172
+  [achado] cenários que terminam em Shutdown tendo recebido ao menos um Drain: 8160
+  [ok]    a enumeração alcança a cadeia completa induzida pela bateria (antes inalcançável com N = 4)
+  [achado] cenários que terminam com bateria Critical e aviônica em voo, sem reação em 2 ticks ociosos: 172
+           menor exemplo: ["Drain","Drain","TakeoffSignal","idle","idle"]
+           (o ambiente reage à BORDA 'bateria entrou em Critical', e não ao NÍVEL 'bateria está em Critical')
+  [achado] cenários com ao menos um descarte de telemetria pelo ambiente: 8726 de 87381
+           (CutoffHeld,CueBatteryCritical): 4144 ocorrências
+           (TouchdownHeld,CueBatteryCritical): 5651 ocorrências
+           menor exemplo: ["TakeoffSignal","Drain","Drain","Drain"]
+Test suite avionics-chain-tests: PASS

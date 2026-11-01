@@ -30,6 +30,20 @@ cabal test avionics-sim-tests    # suíte do simulador (cabal test sem alvo falh
 cabal run avionics-sim           # 2 cenários; grava sim_trace_*.mmd em ../../Obsidian/documentation
 ```
 
+## Conformidade com a especificação e matriz de rejeição
+
+`spec/domain_rules.txt` descreve as regras do domínio a partir do texto dos requisitos. Detalhes e
+resultados em [`docs/conformidade.md`](docs/conformidade.md).
+
+```bash
+cabal test avionics-spec-tests     # topologia, FSM ingênua e ação do CREM x especificação (exaustivo)
+bash scripts/negative_matrix.sh    # 16 pares de vértices: 8 compilam, 8 são rejeitados pelo GHC
+cabal test avionics-chain-tests    # cadeia da bateria e descarte do slot (N = 8, 87 381 cenários)
+bash compare-c/run.sh              # mesma FSM em C: o que o compilador e um teste exaustivo detectam
+bash compare-c/run_cpp.sh          # a mesma comparação em C++ (enum class)
+cabal test avionics-policy-tests   # modelo de referência independente e políticas do ambiente (N = 8)
+```
+
 ## Estrutura do repositório
 
 ```

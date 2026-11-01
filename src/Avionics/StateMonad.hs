@@ -116,6 +116,63 @@ f >=> g = \x -> f x >>= g
 -- Logo, com objetos = tipos, morfismos = `a -> ST s b`, identidade = `pure`
 -- e composição = `>=>`, tem-se uma categoria (a categoria de Kleisli de
 -- `ST s`; Milewski, 2020, cap. 4; Bocchino, 2025, §7).
+--
+-- LEIS DE FUNCTOR E DE APPLICATIVE PARA `ST` (Hutton, 2016, §12.1 e §12.2,
+-- "Functor laws" e "Applicative laws"; mesmo método e mesmas convenções acima)
+--
+-- FUNCTOR 1 — fmap id = id
+--     fmap id m
+--   = ST (\s -> let (x, s') = runST m s in (id x, s'))
+--   = ST (\s -> let (x, s') = runST m s in (x, s'))
+--   = ST (\s -> runST m s)  =  m                              -- (b), (c), eta
+--
+-- FUNCTOR 2 — fmap (g . h) = fmap g . fmap h
+--     fmap g (fmap h m)
+--   = ST (\s -> let (y, s2) = (let (x, s1) = runST m s in (h x, s1))
+--                in (g y, s2))
+--   = ST (\s -> let (x, s1) = runST m s in (g (h x), s1))     -- (b), (d)
+--   = fmap (g . h) m
+--
+-- CONSISTÊNCIA COM A MÔNADA (as duas instâncias foram escritas à mão, por isso
+-- a coincidência precisa ser demonstrada):
+--   fmap f m  =  m >>= (\x -> pure (f x))
+--     m >>= (\x -> pure (f x))
+--   = ST (\s -> let (x, s') = runST m s in runST (pure (f x)) s')
+--   = ST (\s -> let (x, s') = runST m s in (f x, s'))  =  fmap f m
+--
+--   mf <*> mx  =  mf >>= (\f -> mx >>= (\x -> pure (f x)))
+--     mf >>= (\f -> mx >>= (\x -> pure (f x)))
+--   = ST (\s -> let (f, s1) = runST mf s
+--                in runST (mx >>= (\x -> pure (f x))) s1)
+--   = ST (\s -> let (f, s1) = runST mf s
+--                in let (x, s2) = runST mx s1 in (f x, s2))
+--   = mf <*> mx                                               -- (d)
+--
+-- APPLICATIVE 1–4, a partir da consistência acima e das três leis da mônada
+-- (v, u, w são computações; f, y são valores):
+--   identidade:      pure id <*> v
+--                    = pure id >>= (\g -> v >>= (\x -> pure (g x)))
+--                    = v >>= (\x -> pure x) = v                   (leis 1, 2)
+--   homomorfismo:    pure f <*> pure y
+--                    = pure f >>= (\g -> pure y >>= (\x -> pure (g x)))
+--                    = pure (f y)                                 (lei 1, duas vezes)
+--   intercâmbio:     u <*> pure y
+--                    = u >>= (\g -> pure y >>= (\x -> pure (g x)))
+--                    = u >>= (\g -> pure (g y))                   (lei 1)
+--                    pure (\g -> g y) <*> u
+--                    = pure (\g -> g y) >>= (\h -> u >>= (\g -> pure (h g)))
+--                    = u >>= (\g -> pure (g y))                   (lei 1)
+--   composição:      ((pure (.) <*> u) <*> v) <*> w  =  u <*> (v <*> w)
+--                    Lado esquerdo: pure (.) <*> u = u >>= (\f -> pure ((.) f))
+--                    (lei 1); aplicando <*> v e <*> w e usando a lei 3 para
+--                    reassociar, obtém-se
+--                      u >>= (\f -> v >>= (\g -> w >>= (\x -> pure ((f . g) x))))
+--                    Lado direito: u <*> (v <*> w), expandindo `<*>` e
+--                    reassociando pela lei 3, dá a mesma expressão, porque
+--                    (f . g) x = f (g x).
+--   Estas quatro igualdades foram escritas passo a passo para identidade,
+--   homomorfismo e intercâmbio; a de composição está resumida (os passos
+--   intermediários repetem a lei 3) e é a menos detalhada das quatro.
 -- ----------------------------------------------------------------------------
 
 -- | Um passo da FSM como computação com estado: consome um evento, emite a
@@ -198,6 +255,35 @@ lawChecks =
         | o <- outs
         ]
     )
+  , ( "Functor: fmap id m == m"
+    , and [agree (fmap id (avionicsStep e)) (avionicsStep e) | e <- evs]
+    )
+  , ( "Functor: fmap (g . h) m == fmap g (fmap h m)"
+    , and [agree (fmap (length . show) (avionicsStep e)) (fmap length (fmap show (avionicsStep e))) | e <- evs]
+    )
+  , ( "consistência: fmap f m == m >>= pure . f"
+    , and [agree (fmap show (avionicsStep e)) (avionicsStep e >>= (pure . show)) | e <- evs]
+    )
+  , ( "consistência: mf <*> mx == mf >>= (\\f -> mx >>= pure . f)"
+    , and [agree (mf e1 <*> avionicsStep e2) (mf e1 >>= (\f -> avionicsStep e2 >>= (pure . f))) | e1 <- evs, e2 <- evs]
+    )
+  , ( "Applicative: identidade (pure id <*> v == v)"
+    , and [agree (pure id <*> avionicsStep e) (avionicsStep e) | e <- evs]
+    )
+  , ( "Applicative: homomorfismo (pure f <*> pure y == pure (f y))"
+    , and [agree (pure not <*> pure b) (pure (not b) :: ST AvState Bool) | b <- [False, True]]
+    )
+  , ( "Applicative: intercâmbio (u <*> pure y == pure (\\g -> g y) <*> u)"
+    , and [agree (mf e1 <*> pure o) (pure (\g -> g o) <*> mf e1) | e1 <- evs, o <- outs]
+    )
+  , ( "Applicative: composição (pure (.) <*> u <*> v <*> w == u <*> (v <*> w))"
+    , and
+        [ agree
+            (pure (.) <*> mu e1 <*> mf e2 <*> avionicsStep e3)
+            (mu e1 <*> (mf e2 <*> avionicsStep e3))
+        | e1 <- evs, e2 <- evs, e3 <- evs
+        ]
+    )
   , ( "runEvents (State Monad) == runMealy (mapAccumL), sem mônada"
     , and
         [ let (outs', q') = runST (runEvents es) q
@@ -220,6 +306,11 @@ lawChecks =
   where
     evs = [minBound .. maxBound] :: [AvEvent]
     outs = [MsgTakeoff, MsgEmergency, MsgLanded, MsgShutdown, MsgIgnored]
+    -- computação que devolve uma função (para exercitar <*>)
+    mf :: AvEvent -> ST AvState (Output -> Bool)
+    mf e = fmap (==) (avionicsStep e)
+    mu :: AvEvent -> ST AvState (Bool -> Output)
+    mu e = fmap (\o b -> if b then o else MsgIgnored) (avionicsStep e)
     -- seta de Kleisli que ignora a entrada e executa um evento fixo
     k :: AvEvent -> Output -> ST AvState Output
     k e = \_ -> avionicsStep e

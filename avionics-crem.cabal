@@ -86,3 +86,38 @@ test-suite avionics-sim-tests
     avionics-crem,
     crem,
     singletons-base
+
+-- Conformidade com a especificação do domínio (spec/domain_rules.txt), exaustiva.
+--   cabal test avionics-spec-tests
+test-suite avionics-spec-tests
+  import: warnings
+  type: exitcode-stdio-1.0
+  main-is: SpecDomain.hs
+  hs-source-dirs: test
+  build-depends:
+    base,
+    avionics-crem,
+    crem,
+    singletons-base
+
+-- Cadeia da bateria e descarte do slot, por enumeração (N = 8 por padrão):
+--   cabal test avionics-chain-tests
+test-suite avionics-chain-tests
+  import: warnings
+  type: exitcode-stdio-1.0
+  main-is: SpecChain.hs
+  hs-source-dirs: test
+  build-depends:
+    base,
+    avionics-crem
+
+-- Modelo de referência independente do ambiente e comparação de políticas (N = 8):
+--   cabal test avionics-policy-tests
+test-suite avionics-policy-tests
+  import: warnings
+  type: exitcode-stdio-1.0
+  main-is: SpecPolicy.hs
+  hs-source-dirs: test
+  build-depends:
+    base,
+    avionics-crem

@@ -1,0 +1,12 @@
+Test suite avionics-policy-tests: RUNNING...
+=== Modelo de referência e políticas do ambiente (N = 8, 87381 cenários) ===
+  [ok]    modelo de referência (sem CREM, política OneSlot) == simulador do CREM: vértices a cada tick e saídas
+  [achado] cenários em que Queue e OneSlot diferem em algum tick (vértices; as saídas relevantes coincidem nos demais): 0 de 87381
+  [achado] estado final (aviônica, energia) diferente entre Queue e OneSlot: 0 de 87381
+  [achado] estado final diferente entre Level e OneSlot: 5841 de 87381
+           menor exemplo: ["Drain","Drain","TakeoffSignal","idle"]
+  [achado] cenários que terminam com bateria Critical, aviônica em voo e 2 ticks ociosos:
+           OneSlot: 172
+           Queue: 172
+           Level: 0
+Test suite avionics-policy-tests: PASS

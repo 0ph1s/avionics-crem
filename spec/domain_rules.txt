@@ -1,0 +1,27 @@
+# Especificação do domínio, escrita a partir do texto dos requisitos e NÃO a partir do código.
+# Fonte: Obsidian/documentation/"Example Avionics.md", seção "1. REQUISITOS DO DOMÍNIO DE AVIÔNICA",
+# item "Regras do Domínio (Topologia)".
+#
+#   "De Grounded, permite-se ir apenas para InFlight (via TakeoffSignal)."
+#   "De InFlight, permite-se ir apenas para EmergencyLanding (via CriticalBattery)."
+#   "De EmergencyLanding, permite-se ir apenas para Grounded (via LandedSignal)."
+#   "De Grounded, permite-se ir para Shutdown (via SystemCutoff)."
+#   "Transição Proibida Crítica: É EXPLICITAMENTE PROIBIDO ir do estado InFlight diretamente para o estado Shutdown."
+#
+# Convenções (mundo fechado):
+#   - `allow A B E`: a transição A -> B (A diferente de B) é permitida, disparada pelo evento E.
+#   - `forbid A B` : a transição A -> B é explicitamente proibida pelo texto.
+#   - Qualquer outro par (A, B) com A diferente de B é proibido por omissão.
+#   - Ficar no mesmo estado (A -> A) é sempre permitido (aresta identidade do CREM; o texto
+#     dos requisitos não a menciona, e a escolha de aceitá-la é do projeto).
+#
+# Pares (estado, evento) sem regra: o texto dos requisitos NÃO diz o que acontece (por exemplo,
+# CriticalBattery em Grounded). Convenção DO PROJETO, e não dos requisitos: o estado não muda.
+# O teste a verifica em item separado, rotulado como convenção.
+#
+# Formato: `allow <de> <para> <evento>` e `forbid <de> <para>`; linhas com # são comentários.
+allow Grounded InFlight TakeoffSignal
+allow InFlight EmergencyLanding CriticalBattery
+allow EmergencyLanding Grounded LandedSignal
+allow Grounded Shutdown SystemCutoff
+forbid InFlight Shutdown

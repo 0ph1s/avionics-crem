@@ -1,0 +1,14 @@
+# GHC 9.6.7: defeitos M5 e M6 (equivalentes aos de compare-c) em Avionics.Naive, cada um compilado sozinho
+
+## M5: confunde :: AvState -> AvEvent -> Bool; confunde s e = s == e
+Naive.hs:110:21: error: [GHC-83865]
+    * Couldn't match expected type `AvState' with actual type `AvEvent'
+    * In the second argument of `(==)', namely `e'
+      In the expression: s == e
+      In an equation for `confunde': confunde s e = s == e
+
+## M6: forade :: AvState; forade = 42
+Naive.hs:110:10: error: [GHC-39999]
+    * No instance for `Num AvState' arising from the literal `42'
+    * In the expression: 42
+      In an equation for `forade': forade = 42
